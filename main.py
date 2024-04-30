@@ -5,7 +5,7 @@ from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from config import BOT_TOKEN
 
 import telegram
-from db_dispatcher import add_user, add_wishlist, take_wihslists, save_item
+from db_dispatcher import *
 
 # Запускаем логгирование
 logging.basicConfig(
@@ -29,7 +29,7 @@ async def start(update, context):
 
 
 async def first_response(update, context):
-    if update.message.text == 'Мои вишлисты':
+    if update.message.text == 'Мои вишлисты' or update.message.text == 'назад':
         reply_keyboard = [['Создать новый', 'Выбрать из существующих']]
         markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=False)
         count_of_lists = len(take_wihslists(update.message.chat.username))
@@ -51,13 +51,18 @@ async def my_wishlists(update, context):
     if update.message.text == 'Создать новый':
         await update.message.reply_text("Для начала введите название вашего вишлиста", reply_markup=ReplyKeyboardRemove())
         return 'named_wishlist'
-    elif update.message.text == 'Выбрать из существующих':
+    elif update.message.text == 'Выбрать из существующих' or update.message.text == 'Назад':
         lists = take_wihslists(update.message.chat.username)
+        context.user_data['lists'] = lists
+        print(lists)
         text = "Вот ваши созданные списки желаний:\n"
         for num, list in enumerate(lists):
             text += str(num + 1) + " *" + list[-1] + '*\n'
+        reply_keyboard = [['Назад']]
+        markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=False)
+
         await update.message.reply_text(text + "Введите порядковый номер вишлиста который хотите посмотреть",
-                                        reply_markup=ReplyKeyboardRemove(), parse_mode='Markdown')
+                                        reply_markup=markup, parse_mode='Markdown')
         return 'chose_my_wishlist'
     else:
         reply_keyboard = [['Создать новый', 'Выбрать из существующих']]
@@ -190,7 +195,18 @@ async def created_wishlist(update, context):
                                         reply_markup=ReplyKeyboardRemove())
         return 'created_wishlist'
 
+async def chose_my_wishlist(update, context):
+    print(update.message.text)
+    if update.message.text.isdigit():
+        if int(update.message.text) <= len(take_wihslists(update.message.chat.username)):
+            reply_keyboard = [['Назад']]
+            markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=False)
+            text = take_all_items(context.user_data['lists'][int(update.message.text) - 1][0])
+            await update.message.reply_text(text, reply_markup=markup)
+            return 'my_wishlists'
+    elif update.message.text == 'Назад':
 
+        return "first_response"
 
 async def stop(update, context):
     await update.message.reply_text("Всего доброго!")
@@ -214,7 +230,8 @@ def main():
             'named_item': [MessageHandler(filters.TEXT & ~filters.COMMAND, named_item)],
             'coasted_item': [MessageHandler(filters.TEXT & ~filters.COMMAND, coasted_item)],
             'description_item': [MessageHandler(filters.TEXT & ~filters.COMMAND, description_item)],
-            'added_item': [MessageHandler(filters.TEXT & ~filters.COMMAND, added_item)]
+            'added_item': [MessageHandler(filters.TEXT & ~filters.COMMAND, added_item)],
+            'chose_my_wishlist': [MessageHandler(filters.TEXT & ~filters.COMMAND, chose_my_wishlist)]
 
         },
 

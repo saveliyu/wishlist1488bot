@@ -31,3 +31,7 @@ def save_item(listid, iteminfo):
     cur.execute('INSERT INTO items(list_id, item_info) VALUES(?, ?)', (listid, str(iteminfo)))
     con.commit()
 
+def take_all_items(listid):
+    us = cur.execute('SELECT item_info FROM items WHERE list_id = ?', (listid, )).fetchall()
+    return(str(us))
+
