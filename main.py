@@ -1,5 +1,6 @@
 # Импортируем необходимые классы.
 import logging
+import json
 from telegram.ext import Application, MessageHandler, filters, CommandHandler, ConversationHandler
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from config import BOT_TOKEN
@@ -196,13 +197,20 @@ async def created_wishlist(update, context):
         return 'created_wishlist'
 
 async def chose_my_wishlist(update, context):
-    print(update.message.text)
     if update.message.text.isdigit():
         if int(update.message.text) <= len(take_wihslists(update.message.chat.username)):
             reply_keyboard = [['Назад']]
             markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=False)
-            text = take_all_items(context.user_data['lists'][int(update.message.text) - 1][0])
-            await update.message.reply_text(text, reply_markup=markup)
+            textt = take_all_items(context.user_data['lists'][int(update.message.text) - 1][0])
+            text = ''
+            for i in list(textt):
+                temp = json.loads(i[0].replace("'", '"'))
+                for key, value in temp.items():
+
+                    text += f'{key} - {value}\n'
+                text += "\n--------------------\n"
+
+            await update.message.reply_text(str(text), reply_markup=markup)
             return 'my_wishlists'
     elif update.message.text == 'Назад':
 

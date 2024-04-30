@@ -33,5 +33,5 @@ def save_item(listid, iteminfo):
 
 def take_all_items(listid):
     us = cur.execute('SELECT item_info FROM items WHERE list_id = ?', (listid, )).fetchall()
-    return(str(us))
+    return us
 
