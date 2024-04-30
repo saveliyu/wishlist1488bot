@@ -17,7 +17,8 @@ def add_wishlist(username, listname):
     userid = cur.execute('SELECT user_id FROM users WHERE user_name = ?', (username, )).fetchone()[0]
     cur.execute('INSERT INTO wishlists(user_id, list_code, list_name) VALUES(?, ?, ?)', (userid, listcode, listname))
     con.commit()
-    return listcode
+    listid = cur.execute('SELECT list_id FROM wishlists WHERE list_code = ?', (listcode, )).fetchone()[0]
+    return listcode, listid
 
 def take_wihslists(username):
     users_lists = cur.execute("""SELECT * FROM wishlists
@@ -25,4 +26,8 @@ def take_wihslists(username):
                                 SELECT user_id FROM users
                                     WHERE user_name = ?)""", (username,)).fetchall()
     return users_lists
+
+def save_item(listid, iteminfo):
+    cur.execute('INSERT INTO items(list_id, item_info) VALUES(?, ?)', (listid, str(iteminfo)))
+    con.commit()
 
